@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Per-agent model map — the "configurable defaults" (parameters, not code).
+# Swap a provider/model by editing one line. Format = LiteLLM model string.
+# Production target on the Core42 Compass sovereign spine is shown in comments.
+# ─────────────────────────────────────────────────────────────────────────────
+default_provider: openai
+
+# Web-research depth/speed dial: fields per search call.
+#   1 = deepest (one search per fact, slow) · 99 = fastest (one per domain)
+web_batch_size: 4
+
+agents:
+  orchestrator:                 # parse intent + plan (fast, frequent)
+    model: gpt-4o-mini          # Compass target: claude-sonnet-4 / llama-3.3-70b
+    temperature: 0
+  researcher:                   # extract narrative facts + cite
+    model: gpt-4o-mini          # Compass target: claude-sonnet-4
+    temperature: 0
+  verifier:                     # the no-hallucination reasoning gate
+    model: gpt-4o               # Compass target: k2-think
+    temperature: 0
+  analyst:                      # opportunities / comparison / prediction
+    model: gpt-4o               # Compass target: claude-sonnet-4 / k2-think
+    temperature: 0.2
+  writer_en:                    # executive prose + chart/slide spec (English)
+    model: gpt-4o               # Compass target: claude-sonnet-4
+    temperature: 0.3
+  researcher_web:                # Tier 2-4 web research (needs a search-capable model)
+    model: gpt-4o-mini-search-preview   # OpenAI web-search model (Compass: a grounded model)
+    temperature: 0
+  chat:                         # conversational AI search (web-capable)
+    model: gpt-4o-mini-search-preview
+    temperature: 0
+  predictive:                   # forward-looking outlook (projection, labeled)
+    model: gpt-4o
+    temperature: 0.3
+  council:                      # multi-perspective review board (verdict + dissent)
+    model: gpt-4o               # Compass target: k2-think / claude-sonnet-4
+    temperature: 0.2
+  visualizer:                   # Visualization Lab director (slides/one-pager/dashboard specs)
+    model: gpt-5.5              # best OpenAI model — advanced visual reasoning
+    temperature: 0.3
+  media:                        # Media Generator visual director (spec only)
+    model: gpt-5.5              # upgraded with visualizer (same visual-intelligence tier)
+    temperature: 0.3
+  writer_ar:                    # native Arabic generation (NOT translation)
+    model: gpt-4o               # Compass target: jais-70b
+    temperature: 0.3
+  localizer:                    # EN->AR translation of narrative field values (cached)
+    model: gpt-4o-mini          # Compass target: jais-30b / jais-70b
+    temperature: 0
+  dashboard:                    # Dashboard Intelligence Agent — layout/chart selection only
+    model: gpt-5.5              # upgraded with visualizer (same visual-intelligence tier)
+    temperature: 0.2
+
+# Per-domain freshness TTL in days (Library decision #4) + fast "news" bucket.
+freshness_days:
+  identity: 365
+  economy: 120
+  energy: 180
+  infrastructure: 180
+  sustainability: 180
+  innovation: 180
+  uae_relations: 90
+  news: 1

@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MOEI — Country Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--gold:#9C7A2D;--gold-light:#B89A52;--gold-pale:#F3ECDC;--cream:#F7F2E8;
+ --card-border:#E6DCC4;--ink:#2B2B2B;--muted:#6F6A60;--white:#fff;--teal:#2C7A6B;--brick:#A6492F;}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Helvetica,Arial,sans-serif;color:var(--ink);background:var(--cream)}
+.topbar{height:6px;background:linear-gradient(90deg,var(--gold-light),var(--gold),var(--gold-light))}
+header{background:var(--white);border-bottom:1px solid var(--card-border);padding:14px 28px;display:flex;align-items:center;gap:14px}
+header .crest{width:38px;height:38px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:800;border:1.5px solid var(--gold)}
+header h1{font-size:15px;margin:0;color:var(--gold);font-weight:800}
+header .sub{font-size:11px;color:var(--muted);margin-top:2px}
+header .spacer{flex:1}
+.langtoggle button{border:1px solid var(--card-border);background:var(--white);color:var(--ink);padding:6px 12px;cursor:pointer;font-weight:700;font-size:12px}
+.langtoggle button.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.langtoggle button:first-child{border-radius:6px 0 0 6px}.langtoggle button:last-child{border-radius:0 6px 6px 0}
+.nav{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--card-border);padding:0 22px;overflow-x:auto}
+.nav button{border:none;background:none;padding:13px 16px;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.nav button.active{color:var(--gold);border-bottom-color:var(--gold)}
+main{max-width:1120px;margin:0 auto;padding:24px}
+.section{display:none}.section.active{display:block}
+.hidden{display:none}
+.card{background:var(--white);border:1px solid var(--card-border);border-radius:14px;padding:24px 26px;margin-bottom:20px}
+.card h2{margin:0 0 4px;font-size:21px}.card p.lead{margin:0 0 16px;color:var(--muted);font-size:13px}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap}
+.searchrow input{flex:1;min-width:240px;padding:12px 14px;border:1.5px solid var(--card-border);border-radius:8px;font-size:15px}
+.btn{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer}
+.btn:hover{background:#876722}.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--gold);border:1.5px solid var(--gold)}
+.chips{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--gold-pale);color:var(--gold);border:1px solid var(--card-border);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none}
+.exports{display:flex;gap:8px;flex-wrap:wrap}
+.stages{list-style:none;margin:0;padding:0;font-size:13px}
+.stages li{padding:7px 0;border-bottom:1px dashed var(--card-border);color:var(--muted)}
+.stages li b{color:var(--teal)}
+.dosshead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.dosshead h2{margin:0;font-size:24px}.iso{color:var(--muted);font-weight:600;font-size:14px}
+.covwrap{flex:1;min-width:200px}.covbar{height:10px;background:var(--gold-pale);border-radius:6px;overflow:hidden}.covbar>div{height:100%;background:var(--teal)}
+.covlabel{font-size:12px;color:var(--muted);margin-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:20px 0}
+.kpi{background:var(--cream);border:1px solid var(--card-border);border-radius:10px;padding:14px 16px}
+.kpi .v{font-size:21px;font-weight:800}.kpi .l{font-size:11px;color:var(--muted);margin-top:3px}.kpi .s{font-size:10px;color:var(--muted);margin-top:6px}
+h3.domain{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:22px 0 8px;border-bottom:2px solid var(--gold-pale);padding-bottom:5px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:start;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;padding:6px 8px}
+td{padding:8px;border-top:1px solid var(--card-border);vertical-align:top}
+td .val{font-weight:700}td .src{font-size:11px;color:var(--muted)}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.b-corr{background:#E6F2EF;color:var(--teal)}.b-manual{background:#F6E7E1;color:var(--brick)}
+.b-conf-high{color:var(--teal)}.b-conf-medium{color:var(--gold)}.b-conf-low{color:var(--brick)}
+.rowbtns button{border:1px solid var(--card-border);background:#fff;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;margin-inline-start:4px}
+.notfound{color:var(--brick);font-size:12px;margin-top:10px}
+.summary{white-space:pre-wrap;line-height:1.55;font-size:14px;background:var(--cream);border-inline-start:3px solid var(--gold);border-radius:8px;padding:16px 18px;margin-top:8px}
+.cmp{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px}
+.cmp th,.cmp td{border:1px solid var(--card-border);padding:8px 10px;text-align:start}
+.cmp th{background:var(--gold-pale);color:var(--ink)}
+.cmp td.leader{background:#E6F2EF;font-weight:800;color:var(--teal)}
+.cmp .yr{font-size:10px;color:var(--muted)}
+.chatbox{height:46vh;overflow:auto;border:1px solid var(--card-border);border-radius:10px;padding:14px;background:var(--cream)}
+.msg{margin:8px 0;display:flex}.msg.u{justify-content:flex-end}
+.msg .b{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+.msg.u .b{background:var(--gold);color:#fff}.msg.a .b{background:#fff;border:1px solid var(--card-border)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:22px 24px;max-width:560px;width:92%;max-height:80vh;overflow:auto}
+.modal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.modal input,.modal textarea{width:100%;padding:9px 11px;border:1.5px solid var(--card-border);border-radius:7px;font-size:14px}
+.modal .actions{margin-top:16px;display:flex;gap:10px;justify-content:flex-end}
+.vhist{font-size:12px;border-top:1px solid var(--card-border);padding:8px 0}
+.note{font-size:11px;color:var(--muted);margin-top:8px}
+[dir="rtl"]{font-family:"Dubai","Segoe UI",Tahoma,sans-serif}
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.libcard{background:var(--cream);border:1px solid var(--card-border);border-radius:10px;padding:13px 15px;cursor:pointer;transition:border-color .15s}
+.libcard:hover{border-color:var(--gold)}
+.libcard .n{font-weight:800;font-size:15px}
+.libcard .m{font-size:11px;color:var(--muted);margin-top:5px}
+.barmini{height:6px;background:var(--gold-pale);border-radius:4px;margin-top:8px;overflow:hidden}
+.barmini>div{height:100%;background:var(--teal)}
+/* ── Executive tear sheet ── */
+.ts-hero{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:stretch;margin:6px 0 14px}
+@media(max-width:760px){.ts-hero{grid-template-columns:1fr}}
+.ts-read{background:var(--cream);border-inline-start:3px solid var(--gold);border-radius:10px;padding:16px 18px;line-height:1.6;font-size:14px;white-space:pre-wrap}
+.ts-traj{background:var(--white);border:1px solid var(--card-border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
+.ts-traj .lab{font-size:11px;color:var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.ts-traj .big{font-size:38px;font-weight:800;line-height:1.05;margin:6px 0 2px}
+.ts-traj .meta{font-size:12px;color:var(--muted)}
+.ts-traj .move{font-weight:800;font-size:14px;margin-top:8px}
+.up{color:var(--teal)}.down{color:var(--brick)}
+.ts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+@media(max-width:760px){.ts-grid{grid-template-columns:1fr}}
+.ts-panel{background:var(--white);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px}
+.ts-panel h4{margin:0 0 10px;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.4px}
+.tradebar{margin:7px 0}
+.tradebar .row{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px}
+.tradebar .row b{font-weight:700}.tradebar .row .v{color:var(--muted);font-size:11px}
+.tradebar .track{height:8px;background:var(--gold-pale);border-radius:5px;overflow:hidden}
+.tradebar .track>div{height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold))}
+.goodtag{display:inline-block;background:var(--gold-pale);color:var(--gold);border-radius:14px;padding:3px 10px;font-size:11px;font-weight:700;margin:3px 4px 0 0}
+.ts-fact{font-size:13px;line-height:1.5;margin:6px 0}
+.ts-fact .k{color:var(--gold);font-weight:700}
+.ts-fact .s{font-size:10px;color:var(--muted)}
+.ts-sectionhead{display:flex;align-items:center;gap:10px;margin:18px 0 6px}
+.ts-sectionhead h3{margin:0;font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px}
+.ts-sectionhead .ln{flex:1;height:2px;background:var(--gold-pale)}
+@media print{
+  header .langtoggle,.nav,.exports,.searchrow,.chips,#ws-progress,.rowbtns,.tabbar,.viewtoggle{display:none!important}
+  body{background:#fff}main{max-width:100%;padding:0}
+  .card{border:none;box-shadow:none;padding:0;margin:0}
+  .ts-panel,.ts-traj,.ts-read,.dash-card{break-inside:avoid}
+}
+.viewtoggle{display:inline-flex;border:1px solid var(--card-border);border-radius:8px;overflow:hidden;margin:4px 0 8px}
+.viewtoggle button{border:none;background:var(--white);color:var(--muted);padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer}
+.viewtoggle button.active{background:var(--gold);color:#fff}
+/* ── interactive dashboard ── */
+.dash-title{font-size:18px;font-weight:800;margin:6px 0 2px}
+.dash-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:12px 0 6px}
+.dash-kpi{background:linear-gradient(135deg,#fff,var(--cream));border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.dash-kpi::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--gold)}
+.dash-kpi .v{font-size:23px;font-weight:800;line-height:1.1}
+.dash-kpi .l{font-size:11px;color:var(--muted);margin-top:4px}
+.dash-kpi .d{font-size:12px;font-weight:700;margin-top:6px}
+.dash-charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:10px}
+.dash-card{background:var(--white);border:1px solid var(--card-border);border-radius:14px;padding:16px 18px}
+.dash-card h4{margin:0 0 4px;font-size:13px;font-weight:800}
+.dash-card .pp{font-size:11px;color:var(--muted);margin:0 0 10px}
+.dash-card.full{grid-column:1/-1}
+.dash-canvas-wrap{position:relative;height:240px}
+.dash-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.dash-panel{border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.55;white-space:pre-wrap}
+.dash-panel h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+.dash-panel.insight{background:var(--cream);border-inline-start:3px solid var(--gold)}
+.dash-panel.opp{background:#EAF4F1;border-inline-start:3px solid var(--teal)}
+.dash-panel.risk{background:#F8ECE7;border-inline-start:3px solid var(--brick)}
+.dash-panel .s{font-size:10px;color:var(--muted);margin-top:8px}
+.dash-drill{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.dash-na{color:var(--brick);font-size:12px;font-weight:700;letter-spacing:.3px}
+.barlist .r{display:flex;justify-content:space-between;font-size:12.5px;margin:6px 0 3px}
+.barlist .t{height:8px;background:var(--gold-pale);border-radius:5px;overflow:hidden}
+.barlist .t>div{height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold))}
+.tiles{display:flex;flex-wrap:wrap;gap:4px}
+.tile{color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:700;min-width:60px;display:flex;flex-direction:column;justify-content:center}
+.sankey text{font-size:11px;fill:var(--ink)}
+/* ── NEW: home news feed ── */
+.newsitem{display:flex;gap:12px;padding:11px 4px;border-bottom:1px dashed var(--card-border);align-items:baseline}
+.newsitem .dot{color:var(--gold);font-size:16px;line-height:1}
+.newsitem a{color:var(--ink);text-decoration:none;font-weight:600;font-size:13.5px}
+.newsitem a:hover{color:var(--gold)}
+.newsitem .m{font-size:11px;color:var(--muted);white-space:nowrap}
+.livebadge{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;background:#E6F2EF;color:var(--teal);margin-inline-start:8px}
+/* ── NEW: chat hero (ChatGPT-style landing) ── */
+.chat-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8vh 16px 5vh;text-align:center}
+.chat-hero .logo{width:64px;height:64px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--gold);margin-bottom:18px}
+.chat-hero h2{font-size:26px;margin:0 0 6px}
+.chat-hero p{color:var(--muted);font-size:13px;margin:0 0 26px}
+.chat-herorow{display:flex;gap:10px;width:100%;max-width:640px}
+.chat-herorow input{flex:1;padding:15px 18px;border:1.5px solid var(--card-border);border-radius:26px;font-size:15px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.chat-herorow .btn{border-radius:26px}
+/* ── NEW: briefing workspace tabbar ── */
+.tabbar{display:flex;gap:4px;background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:6px;margin-bottom:16px;overflow-x:auto}
+.tabbar button{border:none;background:none;padding:9px 13px;font-weight:700;font-size:12.5px;color:var(--muted);cursor:pointer;border-radius:8px;white-space:nowrap}
+.tabbar button.active{background:var(--gold);color:#fff}
+/* ── NEW: agent progress / memory cards ── */
+.agentgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:12px}
+.memocard{background:var(--cream);border:1px solid var(--card-border);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.5}
+.memocard .a{font-weight:800;color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.memocard .t{font-size:10px;color:var(--muted);margin-top:8px}
+/* ── NEW: council seats ── */
+.seatgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+.seat{background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.55}
+.seat h4{margin:0 0 8px;font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px}
+.verdict{background:var(--gold-pale);border:1.5px solid var(--gold);border-radius:12px;padding:16px 18px;font-size:14px;line-height:1.6;white-space:pre-wrap}
+/* ── NEW: parameters page ── */
+.paramgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.agentcard{background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:16px 18px}
+.agentcard .nm{font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px}
+.agentcard .ds{font-size:11.5px;color:var(--muted);margin:5px 0 10px;line-height:1.45;min-height:32px}
+.agentcard select,.agentcard input[type=number]{width:100%;padding:8px 10px;border:1.5px solid var(--card-border);border-radius:7px;font-size:13px;background:#fff;margin-bottom:8px}
+.agentcard .saved{color:var(--teal);font-size:11px;font-weight:700}
+/* ── NEW: logs ── */
+.logrow td{font-size:12.5px}
+.logrow .actor{font-weight:800}
+.logrow.agent .actor{color:var(--gold)}.logrow.user .actor{color:var(--teal)}
+/* ── NEW: isolation banner / keys ── */
+.isolation{background:#F8ECE7;border:1.5px solid var(--brick);border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--brick);font-weight:700;margin-bottom:14px}
+.keyrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--card-border);font-size:13px}
+.keyrow .p{font-weight:800;text-transform:capitalize;min-width:120px}
+.keyrow code{background:var(--cream);padding:3px 8px;border-radius:6px;font-size:12px}
+/* ── NEW: visualization lab ── */
+.labgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:12px}
+.labcard{background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s,transform .1s}
+.labcard:hover{border-color:var(--gold);transform:translateY(-2px)}
+.labcard .ic{font-size:30px;margin-bottom:8px}
+.labcard .nm{font-weight:800;font-size:14px}
+.labcard .ds{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+.labopts{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 4px;font-size:12.5px}
+.labopts label{display:flex;align-items:center;gap:5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+<header>
+  <div class="crest">⬢</div>
+  <div><h1 id="t-title">Ministry of Energy &amp; Infrastructure — Country Intelligence</h1>
+       <div class="sub" id="t-sub">AI-powered, source-verified country dossiers · no hallucination</div></div>
+  <div class="spacer"></div>
+  <div class="langtoggle"><button id="lang-en" class="active" onclick="setLang('en')">EN</button><button id="lang-ar" onclick="setLang('ar')">ع</button></div>
+</header>
+<nav class="nav">
+  <button id="nav-home" class="active" onclick="showSection('home')">Home</button>
+  <button id="nav-chat" onclick="showSection('chat')">Chat</button>
+  <button id="nav-briefings" onclick="showSection('briefings')">Briefings</button>
+  <button id="nav-compare" onclick="showSection('compare')">Compare</button>
+  <button id="nav-sources" onclick="showSection('sources')">Sources</button>
+  <button id="nav-params" onclick="showSection('params')">Parameters</button>
+  <button id="nav-logs" onclick="showSection('logs')">Logs</button>
+</nav>
+
+<main>
+  <!-- ════════ HOME: Central Asia × UAE news + admin ask box ════════ -->
+  <section id="sec-home" class="section active">
+    <div class="card">
+      <h2 id="t-home-h">Prepare leadership in seconds</h2>
+      <p class="lead" id="t-home-p">Ask anything — or type a country to get a verified, decision-ready briefing: summary, talking points, opportunities, council verdict and forecast.</p>
+      <div class="searchrow">
+        <input id="home-input" placeholder="Ask anything, or type a country… e.g. Kazakhstan" onkeydown="if(event.key==='Enter')homeGo('brief')"/>
+        <button class="btn" onclick="homeGo('brief')" id="t-home-brief">Brief →</button>
+        <button class="btn ghost" onclick="homeGo('ask')" id="t-home-ask">Ask</button>
+      </div>
+      <div class="chips">
+        <span class="chip" onclick="openBriefing('Kazakhstan')">Kazakhstan</span>
+        <span class="chip" onclick="openBriefing('Uzbekistan')">Uzbekistan</span>
+        <span class="chip" onclick="openBriefing('Turkmenistan')">Turkmenistan</span>
+        <span class="chip" onclick="openBriefing('Morocco')">Morocco</span>
+        <span class="chip" onclick="openBriefing('Azerbaijan')">Azerbaijan</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="domain" style="margin-top:0"><span id="t-news-h">Central Asia × UAE — latest signals</span><span id="news-live"></span></h3>
+      <div class="chips" style="margin:0 0 8px">
+        <span class="chip" onclick="loadNews('UAE Central Asia energy infrastructure')">Central Asia</span>
+        <span class="chip" onclick="loadNews('UAE Kazakhstan investment energy')">Kazakhstan</span>
+        <span class="chip" onclick="loadNews('UAE Uzbekistan cooperation')">Uzbekistan</span>
+        <span class="chip" onclick="loadNews('Masdar AD Ports DP World Central Asia')">UAE players</span>
+      </div>
+      <div id="news-list"><p class="note">Loading headlines…</p></div>
+    </div>
+    <div class="kpis" id="home-stats"></div>
+    <div class="card"><h3 class="domain" id="t-home-recent">Recently built dossiers</h3><div id="home-recent"></div></div>
+  </section>
+
+  <!-- ════════ CHAT: ChatGPT-style landing ════════ -->
+  <section id="sec-chat" class="section">
+    <div id="chat-hero" class="chat-hero">
+      <div class="logo">⬢</div>
+      <h2 id="t-chath">Where should we start?</h2>
+      <p id="t-chatp">Strategic questions across countries — answered from the verified Library first, with cited research for specifics.</p>
+      <div class="chat-herorow">
+        <input id="chat-hero-input" placeholder="Ask the intelligence assistant…" onkeydown="if(event.key==='Enter')chatFromHero()"/>
+        <button class="btn" onclick="chatFromHero()">→</button>
+      </div>
+      <div class="chips" style="margin-top:18px;justify-content:center">
+        <span class="chip" onclick="chipLastBriefing()" id="t-chip-last">🕑 About the last briefing</span>
+        <span class="chip" onclick="chatQuick('Compare Kazakhstan and Uzbekistan for UAE energy investment')" id="t-chip-cmp">⚖ Kazakhstan vs Uzbekistan</span>
+        <span class="chip" onclick="chatQuick('What are the top UAE cooperation opportunities in Central Asia right now?')" id="t-chip-opp">🤝 Central Asia opportunities</span>
+        <span class="chip" onclick="chatQuick('Which countries in the Library have a net-zero target and what are they?')" id="t-chip-nz">🌱 Net-zero targets</span>
+      </div>
+    </div>
+    <div id="chat-main" class="card hidden">
+      <div class="chatbox" id="chatbox"></div>
+      <div class="searchrow" style="margin-top:12px">
+        <input id="chat-input" placeholder="Ask a follow-up…" onkeydown="if(event.key==='Enter')runChat()"/>
+        <button class="btn" id="chat-btn" onclick="runChat()">Send</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ BRIEFINGS: library + new build ════════ -->
+  <section id="sec-briefings" class="section">
+    <div class="card">
+      <h2 id="t-br-h">Country briefings</h2>
+      <p class="lead" id="t-br-p">Open an existing briefing or build a new one. Each briefing has its own workspace: agent progress, the brief, UAE relations, analysis, forecast and the Visualization Lab.</p>
+      <div class="searchrow">
+        <input id="country" placeholder="e.g. Kazakhstan" onkeydown="if(event.key==='Enter')openBriefing()"/>
+        <button class="btn" id="buildbtn" onclick="openBriefing()" >Open briefing →</button>
+      </div>
+      <div class="chips">
+        <span class="chip" onclick="openBriefing('Kazakhstan')">Kazakhstan</span>
+        <span class="chip" onclick="openBriefing('Uzbekistan')">Uzbekistan</span>
+        <span class="chip" onclick="openBriefing('Morocco')">Morocco</span>
+        <span class="chip" onclick="openBriefing('Germany')">Germany</span>
+      </div>
+    </div>
+    <div class="card"><h3 class="domain" id="t-br-lib" style="margin-top:0">Library</h3><div id="briefings-grid"></div></div>
+  </section>
+
+  <!-- ════════ BRIEFING WORKSPACE ════════ -->
+  <section id="sec-briefing" class="section">
+    <div id="ws-head"></div>
+    <div class="tabbar" id="ws-tabs"></div>
+    <div id="ws-progress" class="card hidden"><h3 class="domain" id="t-prog" style="margin-top:0">Live agent progress &amp; reasoning</h3><ul class="stages" id="stages"></ul><div id="ws-memory"></div></div>
+    <div id="ws-pane"></div>
+  </section>
+
+  <!-- ════════ COMPARE ════════ -->
+  <section id="sec-compare" class="section">
+    <div class="card">
+      <h2 id="t-cmp-h">Compare countries</h2>
+      <p class="lead" id="t-cmp-p">Enter 2–4 countries (comma-separated). Same metric, each with its own source &amp; year; gaps shown, never filled.</p>
+      <div class="searchrow">
+        <input id="cmp-input" placeholder="Kazakhstan, Uzbekistan" value="Kazakhstan, Uzbekistan"/>
+        <button class="btn" id="cmp-btn" onclick="runCompare()">Compare →</button>
+      </div>
+    </div>
+    <div class="card hidden" id="cmp-result"></div>
+  </section>
+
+  <!-- ════════ SOURCES: registry + paid keys + internal DB ════════ -->
+  <section id="sec-sources" class="section">
+    <div class="card">
+      <h2 id="t-src-h">Trusted source registry</h2>
+      <p class="lead" id="t-src-p">Every source the platform may use — auto-populated as dossiers are built. Block a source to drop it from all future research, or add your own.</p>
+      <div class="searchrow">
+        <input id="src-domain" placeholder="add a domain… e.g. agsiw.org" onkeydown="if(event.key==='Enter')addSource()"/>
+        <input id="src-name" placeholder="name (optional)" style="max-width:220px"/>
+        <input id="src-tier" type="number" min="1" max="5" placeholder="tier" style="max-width:90px"/>
+        <button class="btn" id="src-add-btn" onclick="addSource()">+ Add</button>
+      </div>
+    </div>
+    <div class="card" id="src-result"></div>
+    <div class="card">
+      <h2 id="t-keys-h">Paid &amp; private sources</h2>
+      <p class="lead" id="t-keys-p">Connect premium providers (e.g. Bloomberg, S&amp;P Capital IQ) with an API key. Keys are stored locally and shown masked.</p>
+      <div class="searchrow">
+        <input id="key-provider" placeholder="provider… e.g. bloomberg" style="max-width:240px"/>
+        <input id="key-value" placeholder="API key" type="password"/>
+        <button class="btn" onclick="addKey()" id="t-keys-add">Connect</button>
+      </div>
+      <div id="keys-list" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h2 id="t-int-h">Internal database</h2>
+      <p class="lead" id="t-int-p">Link internal ministry data (CSV / JSON). It stays on this machine.</p>
+      <div class="isolation" id="t-int-iso">🔒 ISOLATION GUARANTEE — internal data is never sent to the web, never shared with external AI providers, and never mixed into agent research context.</div>
+      <div class="searchrow">
+        <input id="int-name" placeholder="dataset name… e.g. Bilateral MoUs 2026" style="max-width:280px"/>
+        <input id="int-file" type="file" accept=".csv,.json,.txt" style="flex:1;padding:10px;border:1.5px dashed var(--card-border);border-radius:8px;font-size:13px;background:#fff"/>
+        <button class="btn" onclick="addInternal()" id="t-int-add">Link dataset</button>
+      </div>
+      <div id="int-list" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- ════════ PARAMETERS: model per agent ════════ -->
+  <section id="sec-params" class="section">
+    <div class="card">
+      <h2 id="t-par-h">Parameters — the agent team</h2>
+      <p class="lead" id="t-par-p">Choose which AI model powers each agent. Changes apply immediately (hot-reload) and are saved to the model map. Compass sovereign targets are available as options.</p>
+      <div id="params-list" class="paramgrid"><p class="note">Loading agent roster…</p></div>
+    </div>
+  </section>
+
+  <!-- ════════ LOGS: AI log + user log ════════ -->
+  <section id="sec-logs" class="section">
+    <div class="card">
+      <h2 id="t-log-h">Activity logs</h2>
+      <p class="lead" id="t-log-p">Who did what — every agent step (with its reasoning) and every admin action, fully audited.</p>
+      <div class="viewtoggle">
+        <button id="lt-agent" class="active" onclick="loadLogs('agent')">🤖 AI log</button>
+        <button id="lt-user" onclick="loadLogs('user')">👤 User log</button>
+        <button id="lt-all" onclick="loadLogs('')">All</button>
+      </div>
+      <div id="logs-table"><p class="note">—</p></div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-bg" id="modalbg" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

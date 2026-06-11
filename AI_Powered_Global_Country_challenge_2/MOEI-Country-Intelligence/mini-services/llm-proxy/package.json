@@ -1,0 +1,11 @@
+{
+  "name": "llm-proxy",
+  "version": "1.0.0",
+  "description": "OpenAI-compatible API proxy backed by Z SDK WEB",
+  "scripts": {
+    "dev": "bun --hot index.ts"
+  },
+  "dependencies": {
+    "z-ai-web-dev-sdk": "latest"
+  }
+}
