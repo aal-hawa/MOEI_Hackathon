@@ -1,0 +1,6 @@
+export { default as Home } from './Home'
+export { default as Admin } from './Admin'
+export { default as Customer } from './Customer'
+export { default as CustomerPortal } from './CustomerPortal'
+export { default as Executive } from './Executive'
+export { default as VoiceCall } from './VoiceCall'

@@ -1,0 +1,22 @@
+{
+  "name": "moei-worker",
+  "version": "1.0.0",
+  "description": "MOEI API Worker - Hono-based backend for Cloudflare Workers",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot index.ts",
+    "start": "bun index.ts",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging"
+  },
+  "dependencies": {
+    "hono": "^4.12.23",
+    "@hono/node-server": "^2.0.4",
+    "@prisma/client": "^6.11.1",
+    "prisma": "^6.11.1"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0",
+    "@cloudflare/workers-types": "^4.0.0"
+  }
+}

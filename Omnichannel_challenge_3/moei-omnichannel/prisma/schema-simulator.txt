@@ -1,0 +1,125 @@
+// ─── Simulator Models ──────────────────────────────────────────────────────
+
+model SimUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// WhatsApp Business Models
+model WAContact {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String   @unique
+  avatar     String?
+  lastSeen   String?
+  isOnline   Boolean  @default(false)
+  isBusiness Boolean  @default(false)
+  labels     String   @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  messages   WAMessage[]
+}
+
+model WAMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  fromPhone      String
+  toPhone        String
+  text           String
+  timestamp      String
+  status         String   @default("sent")
+  type           String   @default("text")
+  mediaUrl       String?
+  templateId     String?
+  isFromBusiness Boolean  @default(false)
+  replyTo        String?
+  createdAt      DateTime @default(now())
+  contact        WAContact @relation(fields: [fromPhone], references: [phone])
+  template       WATemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([conversationId])
+}
+
+model WATemplate {
+  id         String   @id @default(cuid())
+  name       String
+  category   String   @default("UTILITY")
+  language   String   @default("en")
+  status     String   @default("PENDING")
+  body       String
+  header     String?
+  footer     String?
+  parameters String   @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  messages   WAMessage[]
+}
+
+model WABusinessProfile {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String   @unique
+  email       String?
+  address     String?
+  description String?
+  website     String?
+  avatar      String?
+  industry    String?
+  about       String?
+  verified    Boolean  @default(false)
+  rating      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Email Models
+model EmailMsg {
+  id            String   @id @default(cuid())
+  fromEmail     String
+  fromName      String?
+  toEmails      String
+  ccEmails      String   @default("[]")
+  bccEmails     String   @default("[]")
+  subject       String
+  body          String
+  htmlBody      String?
+  timestamp     String
+  isRead        Boolean  @default(false)
+  isStarred     Boolean  @default(false)
+  isDraft       Boolean  @default(false)
+  hasAttachment Boolean  @default(false)
+  attachments   String   @default("[]")
+  folder        String   @default("inbox")
+  threadId      String?
+  labels        String   @default("[]")
+  priority      String   @default("normal")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([folder])
+  @@index([fromEmail])
+  @@index([threadId])
+}
+
+model EmailFolder {
+  id    String @id @default(cuid())
+  name  String
+  icon  String
+  count Int    @default(0)
+  type  String @default("custom")
+  order Int    @default(0)
+}
+
+model EmailAccount {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  avatar      String?
+  provider    String   @default("gmail")
+  isConnected Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -1,0 +1,37 @@
+{
+  "stt": {
+    "primary": "deepgram",
+    "fallback": "zai",
+    "deepgram": {
+      "model": "nova-3",
+      "language": "ar",
+      "encoding": "linear16",
+      "sampleRate": 48000,
+      "apiKey": "6d8ce3266e299f0d41f171dfa949ebc3e62b5c2c"
+    }
+  },
+  "tts": {
+    "primary": "cartesia",
+    "fallback": "zai",
+    "languageProviders": {
+      "ar": {
+        "primary": "cartesia",
+        "fallback": "gemini"
+      },
+      "en": {
+        "primary": "cartesia",
+        "fallback": "deepgram"
+      }
+    }
+  },
+  "llm": {
+    "primary": "zai",
+    "fallback": "gemini",
+    "gemini": {
+      "apiKey": "rk_378538813a1da63282dbc24382a55cc8",
+      "baseUrl": "https://recentech-ai-worker.42abudhabi424242.workers.dev/gemini"
+    }
+  },
+  "language": "multi",
+  "maxSpeechDuration": 15000
+}

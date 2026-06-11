@@ -1,0 +1,16 @@
+{
+  "stt": {
+    "primary": "deepgram",
+    "fallback": "zai"
+  },
+  "tts": {
+    "primary": "cartesia",
+    "fallback": "deepgram"
+  },
+  "llm": {
+    "primary": "zai",
+    "fallback": "gemini"
+  },
+  "language": "multi",
+  "maxSpeechDuration": 15000
+}

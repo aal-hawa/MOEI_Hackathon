@@ -1,0 +1,355 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Applicant {
+  id              String   @id @default(cuid())
+  emiratesId      String   @unique
+  nameAr          String
+  nameEn          String?
+  phone           String
+  email           String?
+  monthlyIncome   Float
+  employer        String?
+  employerType    String?  // government, semi-government, private
+  familySize      Int      @default(1)
+  isCitizen       Boolean  @default(true)
+  hasFamilyBook   Boolean  @default(true)
+
+  // MOEI-specific fields
+  maritalStatus       String?  // single, married, divorced, widowed
+  spouseIncome        Float?   @default(0)  // spouse's monthly income if married
+  totalHouseholdIncome Float?  @default(0)  // combined income
+  incomeStability     String?  @default("stable") // stable, reduced, lost, variable
+  previousIncome      Float?   // income before change, for stability analysis
+  numberOfChildren    Int      @default(0)
+  housingType         String?  // apartment, villa, land
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  loans           HousingLoan[]
+  requests        ReschedulingRequest[]
+}
+
+model HousingLoan {
+  id                  String   @id @default(cuid())
+  applicantId         String
+  originalAmount      Float
+  remainingBalance    Float
+  monthlyInstallment  Float
+  loanDurationMonths  Int      @default(0)
+  elapsedMonths       Int      @default(0)
+  interestRate        Float    @default(0)
+  loanType            String   // grant, loan, maintenance
+  disbursementDate    DateTime @default(now())
+  status              String   @default("active") // active, completed, defaulted
+
+  // MOEI-specific fields
+  paymentHistory       String @default("[]") // JSON array of payment records: [{month, year, status: paid/missed/partial, amount}]
+  totalPaid            Float  @default(0)    // total amount paid so far
+  totalMissedPayments  Int    @default(0)    // total missed payments count
+  reschedulingCount    Int    @default(0)    // number of times rescheduled before
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  applicant           Applicant         @relation(fields: [applicantId], references: [id])
+  arrears             Arrear[]
+  requests            ReschedulingRequest[]
+}
+
+model Arrear {
+  id              String   @id @default(cuid())
+  loanId          String
+  missedMonths    Int
+  totalOverdue    Float
+  delayDays       Int
+  reason          String?  // job_loss, medical, salary_cut, other
+
+  // MOEI-specific fields
+  consecutiveMissedMonths Int       @default(0)  // consecutive months of non-payment
+  firstMissedDate         DateTime? // when the first payment was missed
+  lastPaymentDate         DateTime? // date of last successful payment
+  lastPaymentAmount       Float?    // amount of last payment
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  loan            HousingLoan @relation(fields: [loanId], references: [id])
+}
+
+model ReschedulingRequest {
+  id                      String   @id @default(cuid())
+  applicantId             String
+  loanId                  String
+  requestedDurationMonths Int
+  reason                  String?
+  reasonCategory          String   // job_loss, medical, salary_cut, divorce, retirement, other
+  supportingDocuments     String   @default("[]") // JSON array of document names
+  uploadedFiles           String   @default("[]") // JSON array of uploaded file metadata
+  status                  String   @default("pending") // pending, under_review, ai_assessed, approved, rejected, escalated
+  priority                String   @default("normal") // normal, urgent, critical
+  notes                   String?
+  reviewedBy              String?
+  reviewedAt              DateTime?
+  isViewed                Boolean  @default(false)
+  firstViewedAt           DateTime?
+
+  // MOEI-specific fields
+  incomePerFamilyMember   Float?   // calculated: totalHouseholdIncome / familySize
+  deductionRate           Float?   // proposed deduction as % of income
+  documentCompleteness    String?  @default("pending") // complete, incomplete, pending
+  missingDocuments        String   @default("[]") // JSON array of missing document names
+  moeiCompliance          String   @default("[]") // JSON array of MOEI compliance checks
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  applicant               Applicant     @relation(fields: [applicantId], references: [id])
+  loan                    HousingLoan   @relation(fields: [loanId], references: [id])
+  assessment              AIAssessment?
+  auditLogs               AuditLog[]
+}
+
+model AIAssessment {
+  id                      String   @id @default(cuid())
+  requestId               String   @unique
+  riskScore               Float    // 0-100
+  riskLevel               String   // low, medium, high, critical
+  confidenceScore         Float    // 0-100
+  recommendedAmount       Float
+  recommendedDuration     Int
+  recommendedInstallment  Float
+  debtBurdenRatio         Float    // current DBR
+  proposedDBR             Float    // proposed DBR after rescheduling
+  eligibilityStatus       String   // eligible, conditionally_eligible, ineligible
+  decisionRationale       String   // JSON string with factors
+  governanceCompliance    String   @default("[]") // JSON array of compliance checks
+  riskFactors             String   @default("[]") // JSON array of risk factors
+  shapExplanation         String   @default("[]") // JSON array of SHAP-like factor contributions
+  requiresHumanReview     Boolean  @default(false)
+  humanReviewReason       String?
+  aiModelVersion          String   @default("v1.0")
+  processingTimeMs        Int?
+
+  // MOEI-specific fields
+  applicationStatus       String?  // complete, incomplete
+  incomeAnalysis          String?  // JSON: {salary, stability, perMemberAverage, householdTotal}
+  proposedDeductionRate   Float?   // % of income
+  rule20PercentCompliance String?  // pass, fail
+  periodRuleCompliance    String?  // pass, fail
+  moeiRecommendation      String?  // approve, request_documents, refer_to_employee
+  moeiReasoning           String?  // explanation text
+  caseSummary             String?  // overview of beneficiary's situation
+
+  createdAt               DateTime @default(now())
+
+  request                 ReschedulingRequest @relation(fields: [requestId], references: [id])
+}
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  requestId         String?  // Optional — not all actions relate to a request
+  action            String   // created, assessed, approved, rejected, escalated, modified, document_verified, login, logout, settings_changed, field_updated, user_created, user_updated, role_changed, etc.
+  performedBy       String   // system, employee:email
+  details           String   // JSON string with action-specific details
+  timestamp         DateTime @default(now())
+  performedByUserId String?
+
+  // Enhanced audit fields
+  category          String   @default("general") // request, auth, user_management, settings, field_config, system
+  previousValue     String?  // JSON — previous state before change
+  newValue          String?  // JSON — new state after change
+  affectedRecord    String?  // What record/section was affected (e.g. "FormField:emiratesId", "User:abc123")
+  ipAddress         String?
+  userAgent         String?
+
+  request           ReschedulingRequest? @relation(fields: [requestId], references: [id])
+  performedByUser   User?                @relation(fields: [performedByUserId], references: [id])
+}
+
+model GovernanceRule {
+  id              String   @id @default(cuid())
+  ruleCode        String   @unique
+  nameEn          String
+  nameAr          String
+  description     String
+  category        String   // eligibility, debt_burden, duration, amount, documentation
+  condition       String   // JSON string defining the rule condition
+  isActive        Boolean  @default(true)
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model User {
+  id              String   @id @default(cuid())
+  uaepassSub      String   @unique
+  emiratesId      String   @unique
+  email           String?
+  phone           String?
+  firstnameEN     String
+  lastnameEN      String
+  firstnameAR     String?
+  lastnameAR      String?
+  fullnameEN      String
+  fullnameAR      String?
+  nationalityEN   String?
+  nationalityAR   String?
+  gender          String?
+  dob             String?
+  avatarUrl       String?
+  role            String   @default("citizen") // citizen, employee, reviewer, manager, admin, superadmin
+  department      String?  // housing_finance, risk_assessment, compliance, management
+  sopLevel        String   @default("sop2")    // sop1, sop2, sop3
+  isActive        Boolean  @default(true)
+  lastLoginAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Admin authentication fields
+  passwordHash    String?  // For admin/employee email+password login (citizens use UAE PASS only)
+  twoFactorSecret String?  // TOTP secret for 2FA
+  twoFactorEnabled Boolean @default(false)
+  permissions     String   @default("[]") // JSON array of permission strings for RBAC
+  loginAttempts   Int      @default(0)
+  lockedUntil     DateTime? // Account lock after too many failed attempts
+
+  sessions        Session[]
+  auditActions    AuditLog[]
+  loginHistory    LoginHistory[]
+}
+
+model Session {
+  id              String   @id @default(cuid())
+  userId          String
+  accessToken     String
+  refreshToken    String?
+  authMode        String   @default("mock") // mock, production, admin_password
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  // Session tracking
+  ipAddress       String?
+  userAgent       String?
+  deviceInfo      String?  // Parsed browser/device info
+
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model FormField {
+  id                  String   @id @default(cuid())
+  labelEN             String
+  labelAR             String
+  fieldKey            String   @unique
+  fieldType           String   // text, number, select, textarea, date, file, checkbox, radio
+  placeholderEN       String?
+  placeholderAR       String?
+  helpTextEN          String?
+  helpTextAR          String?
+  required            Boolean  @default(true)
+  order               Int      @default(0)
+  section             String   @default("personal") // personal, financial, loan, documents, review
+  options             String   @default("[]") // JSON array for select/radio options
+
+  // Structured validation rules (JSON: {min, max, regex, minLength, maxLength, allowedValues, customMessage, customMessageAr})
+  validation          String   @default("{}")
+
+  // Human-readable rule descriptions shown to customers
+  ruleDescriptionEN   String?  // e.g. "Must be a valid UAE mobile number starting with 05"
+  ruleDescriptionAR   String?  // e.g. "يجب أن يكون رقم هاتف إماراتي صحيح يبدأ بـ 05"
+  showRule            Boolean  @default(true) // Whether to display the rule to customers
+
+  // AI verification
+  aiValidationPrompt  String?  // Custom AI prompt for field verification
+  aiAutoValidate      Boolean  @default(false)
+
+  // Visibility & status
+  isVisible           Boolean  @default(true)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model ApprovalWorkflow {
+  id                  String   @id @default(cuid())
+  nameEN              String
+  nameAR              String
+  descriptionEN       String?
+  descriptionAR       String?
+  steps               String   @default("[]") // JSON array of workflow steps
+  autoApprovalRules   String   @default("{}")
+  autoRejectionRules  String   @default("{}")
+  isActive            Boolean  @default(true)
+  priority            Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// System-wide configurable business rules & limits
+// Admin can change these from the Approval Workflows page without developer intervention
+model SystemConfig {
+  id              String   @id @default(cuid())
+  configKey       String   @unique  // e.g. "max_dbr_limit", "risk_threshold_high"
+  configValue     String             // The value (always stored as string, parsed by type)
+  defaultValue    String             // Original default for reset
+  labelEN         String             // Human-readable label
+  labelAR         String
+  descriptionEN   String?            // What this config controls
+  descriptionAR   String?
+  category        String   @default("general") // dbr_limits, risk_thresholds, loan_limits, eligibility, auto_approve, auto_reject, human_review, documents, employer_weights, grace_period
+  valueType       String   @default("number")  // number, boolean, string, json
+  min             Float?             // Min allowed value (for number type)
+  max              Float?             // Max allowed value (for number type)
+  unit             String?            // e.g. "%", "AED", "months", "days", "points"
+  isPublic        Boolean  @default(false) // If true, this config is accessible without admin auth (for public-facing pages)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Login history for tracking admin/employee access
+model LoginHistory {
+  id              String   @id @default(cuid())
+  userId          String
+  loginAt         DateTime @default(now())
+  logoutAt        DateTime?
+  ipAddress       String?
+  userAgent       String?
+  deviceInfo      String?
+  authMethod      String   @default("uaepass") // uaepass, email_password, two_factor
+  success         Boolean  @default(true)
+  failureReason   String?  // If login failed, why
+
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+// AI Model Configuration — multi-provider support
+model AIModelConfig {
+  id              String   @id @default(cuid())
+  name            String   // Display name e.g. "Recentech AI — GLM-4-Plus"
+  provider        String   // recentech, openai, gemini, ollama, openai_compatible
+  modelId         String   // Model identifier e.g. "glm-4-plus", "gpt-4o", "gemini-2.5-flash", "llama3"
+  baseUrl         String   // API endpoint base URL
+  apiKey          String?  // API key (nullable for local models like Ollama)
+  isActive        Boolean  @default(true)
+  isDefault       Boolean  @default(false)  // Only one model can be default at a time
+  capabilities    String   @default("[]")   // JSON: ["chat","vision","tts","asr","image_gen"]
+  maxTokens       Int      @default(4096)
+  temperature     Float    @default(0.7)
+  descriptionEN   String?
+  descriptionAR   String?
+  lastTestedAt    DateTime?
+  lastTestResult  String?  // "success" | "failed" | null
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

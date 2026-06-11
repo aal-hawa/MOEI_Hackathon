@@ -1,0 +1,719 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id            String        @id @default(cuid())
+  nameAr        String?
+  nameEn        String
+  email         String?       @unique
+  phone         String?       @unique
+  uaePassId     String?       @unique
+  preferredLang String        @default("en")
+  preferredChannel String     @default("web")
+  emirate       String?
+  sentiment     Float         @default(0.5)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // ─── UAE PASS Profile Fields ──────────────────────────────────────────────
+  // These fields are populated when a customer authenticates via UAE PASS.
+  // Mock data uses these fields to simulate real customer identities.
+  nationality     String?   @default("")   // e.g. "UAE", "Jordan", "India"
+  gender          String?   @default("")   // "male" or "female"
+  dateOfBirth     String?   @default("")   // ISO date string: "1990-05-15"
+  emiratesId      String?   @default("")   // 15-digit Emirates ID number
+  passportNumber  String?   @default("")   // Passport number
+  familyBookNum   String?   @default("")   // Family book number (for UAE nationals)
+  addressAr       String?   @default("")   // Arabic address
+  addressEn       String?   @default("")   // English address
+  occupation      String?   @default("")   // e.g. "Engineer", "Teacher"
+  employer        String?   @default("")   // e.g. "ADNOC", "Government"
+  monthlyIncome   String?   @default("")   // e.g. "25000" (AED)
+  propertyOwned   String?   @default("")   // "yes" or "no"
+  propertyType    String?   @default("")   // "residential", "commercial", "industrial"
+  isUaeNational   Boolean   @default(false) // Derived from nationality
+  isVerified      Boolean   @default(false) // UAE PASS verified status
+
+  cases            Case[]
+  interactions     Interaction[]
+  emailMessages    EmailMessage[]
+  feedbacks        Feedback[]
+  serviceRequests  ServiceRequest[]
+  bills            Bill[]
+  appointments     Appointment[]
+}
+
+model Case {
+  id              String       @id @default(cuid())
+  referenceNumber String       @unique
+  customerId      String
+  titleAr         String?
+  titleEn         String
+  description     String?
+  status          String       @default("open")
+  priority        String       @default("medium")
+  category        String?
+  channel         String       @default("web")
+  assignedAgent   String?
+  resolution      String?
+  sentiment       Float        @default(0.5)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  resolvedAt      DateTime?
+  customer        Customer     @relation(fields: [customerId], references: [id])
+  interactions    Interaction[]
+  feedbacks       Feedback[]
+}
+
+model Translation {
+  id        Int    @id @default(autoincrement())
+  key       String @unique
+  en        String
+  ar        String
+  category  String @default("general")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Interaction {
+  id           String   @id @default(cuid())
+  customerId   String
+  caseId       String?
+  channel      String   @default("web")
+  type         String   @default("message")
+  direction    String   @default("inbound")
+  content      String
+  intent       String?
+  sentiment    Float    @default(0.5)
+  language     String   @default("en")
+  metadata     String?
+  createdAt    DateTime @default(now())
+  customer     Customer @relation(fields: [customerId], references: [id])
+  case         Case?    @relation(fields: [caseId], references: [id])
+}
+
+model KnowledgeArticle {
+  id          String   @id @default(cuid())
+  titleAr     String?
+  titleEn     String
+  contentAr   String?
+  contentEn   String
+  category    String
+  tags        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?  @default("")
+  email       String   @unique
+  phone       String?
+  role        String   @default("agent") // agent, supervisor, admin
+  status      String   @default("available") // available, busy, offline, break
+  skills      String?  // JSON: ["electricity","water","housing"]
+  languages   String   @default("en") // JSON: ["en","ar"]
+  avatar      String?
+  activeCases Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  shifts      AgentShift[]
+  sessions    ConversationSession[]
+}
+
+model AgentShift {
+  id          String   @id @default(cuid())
+  agentId     String
+  channel     String   @default("Web")
+  startTime   DateTime
+  endTime     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  agent       Agent    @relation(fields: [agentId], references: [id])
+}
+
+model DashboardKPI {
+  id           String   @id @default(cuid())
+  metric       String
+  value        Float
+  channel      String?
+  period       String
+  recordedAt   DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  customerId  String
+  channel     String
+  title       String
+  message     String
+  status      String   @default("pending")
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model ChannelConfig {
+  id            String   @id @default(cuid())
+  channel       String   @unique
+  enabled       Boolean  @default(false)
+  config        String   @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model EmailMessage {
+  id            String   @id @default(cuid())
+  customerId    String?
+  fromAddress   String
+  toAddress     String
+  subject       String
+  body          String
+  direction     String   @default("inbound")
+  status        String   @default("received")
+  threadId      String?
+  aiReplied     Boolean  @default(false)
+  metadata      String?
+  createdAt     DateTime @default(now())
+  customer      Customer? @relation(fields: [customerId], references: [id])
+}
+
+model Feedback {
+  id         String   @id @default(cuid())
+  customerId String?
+  caseId     String?
+  rating     Int
+  categories String?  @default("{}")
+  comment    String?
+  channel    String   @default("web")
+  createdAt  DateTime @default(now())
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  case       Case?    @relation(fields: [caseId], references: [id])
+}
+
+model Service {
+  id            String   @id @default(cuid())
+  nameEn        String
+  nameAr        String
+  descriptionEn String
+  descriptionAr String
+  category      String
+  icon          String?
+  url           String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  serviceRequests ServiceRequest[]
+}
+
+model ServiceRequest {
+  id              String   @id @default(cuid())
+  customerId      String
+  serviceId       String
+  status          String   @default("pending")
+  referenceNumber String   @unique
+  data            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  customer        Customer @relation(fields: [customerId], references: [id])
+  service         Service  @relation(fields: [serviceId], references: [id])
+}
+
+// ─── AI Agent Service Rules ──────────────────────────────────────────────────
+// Defines what data the AI agent needs from customers for each service
+// Admin can add/edit/delete rules to make the AI agent more flexible
+
+model ServiceRule {
+  id            String   @id @default(cuid())
+  serviceId     String?  // Optional link to existing Service model
+  nameEn        String   // e.g. "New Electricity Connection"
+  nameAr        String   // e.g. "توصيل كهرباء جديد"
+  category      String   // electricity_water, housing, petroleum, transport, sustainability, general, or custom
+  descriptionEn String?  @default("")
+  descriptionAr String?  @default("")
+  feeAmount     String?  // e.g. "1,500" or "Free"
+  feeCurrency   String   @default("AED")
+  processingTimeEn String? // e.g. "3-5 working days"
+  processingTimeAr String?
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+
+  // AI Agent behavior configuration
+  agentInstructionsEn String? @default("") // Specific instructions for AI agent
+  agentInstructionsAr String? @default("")
+  requiredActions String  @default("[]") // JSON array: ["search","add","edit","delete"]
+  eligibilityEn  String? @default("") // Who can use this service
+  eligibilityAr  String? @default("")
+
+  // ─── Enhanced Data Fields ──────────────────────────────────────────────────
+  priority          String  @default("medium") // low, medium, high, urgent
+  tags              String  @default("[]") // JSON array of tags: ["electricity","residential"]
+  requiredDocumentsEn String? @default("") // Documents needed: "Emirates ID, Title Deed, NOC"
+  requiredDocumentsAr String? @default("")
+  serviceUrl        String? @default("") // Link to official service page
+  contactPhone      String? @default("") // Direct contact number
+  contactEmail      String? @default("") // Direct contact email
+  autoResponseEn    String? @default("") // Auto-response template for AI
+  autoResponseAr    String? @default("")
+  escalationRules   String  @default("{}") // JSON: {urgencyThreshold: "high", autoEscalate: true}
+  slaHours          Int     @default(72) // Service Level Agreement in hours (default 72h = 3 days)
+  businessHoursEn   String? @default("") // e.g. "Sun-Thu 7:30 AM - 2:30 PM"
+  businessHoursAr   String? @default("")
+  relatedServices   String  @default("[]") // JSON array of related service IDs
+  version           Int     @default(1) // Rule version for tracking changes
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  fields        ServiceRuleField[]
+  actions       ServiceRuleAction[]
+  hitLogs       RuleHitLog[]
+}
+
+// ─── Custom Categories ─────────────────────────────────────────────────────
+// Admin can create new categories beyond the built-in ones
+
+model ServiceCategory {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g. "digital_services" - used as reference in ServiceRule.category
+  labelEn     String   // e.g. "Digital Services"
+  labelAr     String   // e.g. "الخدمات الرقمية"
+  icon        String   @default("Settings") // Lucide icon name
+  color       String   @default("bg-gray-100 text-gray-700 dark:bg-gray-800/30 dark:text-gray-400")
+  border      String   @default("border-gray-300 dark:border-gray-700")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  isCustom    Boolean  @default(true) // true = user-created, false = built-in
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SystemHealth {
+  id                String   @id @default(cuid())
+  nameKey           String   // e.g. "electricityServices"
+  icon              String   // Lucide icon name, e.g. "Zap"
+  status            String   @default("operational") // "operational", "degraded", "down"
+  uptime            Float    @default(99.99)
+  lastIncidentHours Int?
+  color             String   @default("text-gray-600")
+  updatedAt         DateTime @updatedAt
+}
+
+model ServiceRuleField {
+  id            String   @id @default(cuid())
+  ruleId        String
+  fieldKey      String   // e.g. "emirates_id", "full_name", "phone"
+  customerProfileKey String? @default("")  // maps to customer profile field: e.g. "emiratesId" → customer.emiratesId, "fullName" → customer.nameEn
+  labelEn       String   // e.g. "Emirates ID"
+  labelAr       String   // e.g. "رقم الهوية"
+  fieldType     String   // text, number, email, phone, select, date, file, textarea, id_number
+  required      Boolean  @default(true)
+  forActions    String   @default("[]") // JSON array: ["search","add","edit","delete"]
+  placeholderEn String?  @default("")
+  placeholderAr String?  @default("")
+  validationEn  String?  @default("") // e.g. "Must be 15 digits"
+  validationAr  String?  @default("")
+  optionsEn     String?  @default("") // JSON array for select: ["Residential","Commercial"]
+  optionsAr     String?  @default("") // JSON array in Arabic
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  rule          ServiceRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+}
+
+// ─── Chat Configuration ─────────────────────────────────────────────────────
+// Admin-configurable chat settings (welcome message, fallback responses, etc.)
+
+model ChatConfig {
+  id               String   @id @default(cuid())
+  key              String   @unique // e.g. "welcome_message", "fallback_default"
+  valueEn          String   // English value
+  valueAr          String?  // Arabic value (optional)
+  description      String?  // Admin-facing description of what this config controls
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// ─── Bills & Appointments ──────────────────────────────────────────────────
+model Bill {
+  id            String   @id @default(cuid())
+  customerId    String
+  amount        Float
+  status        String   @default("pending") // pending, paid, overdue
+  dueDate       DateTime?
+  description   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  customer      Customer @relation(fields: [customerId], references: [id])
+}
+
+model Appointment {
+  id            String   @id @default(cuid())
+  customerId    String
+  date          DateTime
+  timeSlot      String
+  service       String
+  status        String   @default("scheduled") // scheduled, completed, cancelled
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  customer      Customer @relation(fields: [customerId], references: [id])
+}
+// ─── Simulator Models ──────────────────────────────────────────────────────
+
+model SimUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// WhatsApp Business Models
+model WAContact {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String   @unique
+  avatar     String?
+  lastSeen   String?
+  isOnline   Boolean  @default(false)
+  isBusiness Boolean  @default(false)
+  labels     String   @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  messages   WAMessage[]
+}
+
+model WAMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  fromPhone      String
+  toPhone        String
+  text           String
+  timestamp      String
+  status         String   @default("sent")
+  type           String   @default("text")
+  mediaUrl       String?
+  templateId     String?
+  isFromBusiness Boolean  @default(false)
+  replyTo        String?
+  createdAt      DateTime @default(now())
+  contact        WAContact @relation(fields: [fromPhone], references: [phone])
+  template       WATemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([conversationId])
+}
+
+model WATemplate {
+  id         String   @id @default(cuid())
+  name       String
+  category   String   @default("UTILITY")
+  language   String   @default("en")
+  status     String   @default("PENDING")
+  body       String
+  header     String?
+  footer     String?
+  parameters String   @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  messages   WAMessage[]
+}
+
+model WABusinessProfile {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String   @unique
+  email       String?
+  address     String?
+  description String?
+  website     String?
+  avatar      String?
+  industry    String?
+  about       String?
+  verified    Boolean  @default(false)
+  rating      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Email Models
+model EmailMsg {
+  id            String   @id @default(cuid())
+  fromEmail     String
+  fromName      String?
+  toEmails      String
+  ccEmails      String   @default("[]")
+  bccEmails     String   @default("[]")
+  subject       String
+  body          String
+  htmlBody      String?
+  timestamp     String
+  isRead        Boolean  @default(false)
+  isStarred     Boolean  @default(false)
+  isDraft       Boolean  @default(false)
+  hasAttachment Boolean  @default(false)
+  attachments   String   @default("[]")
+  folder        String   @default("inbox")
+  threadId      String?
+  labels        String   @default("[]")
+  priority      String   @default("normal")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([folder])
+  @@index([fromEmail])
+  @@index([threadId])
+}
+
+model EmailFolder {
+  id    String @id @default(cuid())
+  name  String
+  icon  String
+  count Int    @default(0)
+  type  String @default("custom")
+  order Int    @default(0)
+}
+
+model EmailAccount {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  avatar      String?
+  provider    String   @default("gmail")
+  isConnected Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Conversation Sessions ──────────────────────────────────────────────────
+// Tracks active conversations across all channels with AI mode control
+
+model ConversationSession {
+  id              String   @id @default(cuid())
+  customerId      String
+  agentId         String?  // Assigned employer/agent
+  channel         String   @default("web") // web, whatsapp, voice, email
+  status          String   @default("active") // active, waiting, transferred, resolved, closed
+  aiMode          String   @default("full_ai") // full_ai, ai_assist, llm_tts_only, human_only, ai_disabled
+  language        String   @default("en") // Auto-detected language
+  intent          String?
+  sentiment       Float    @default(0.5)
+  transcript      String   @default("[]") // JSON array of transcript chunks
+  aiSuggestions   String   @default("[]") // JSON array of AI suggestions for employer
+  caseId          String?  // Linked case
+  serviceRequestId String? // Linked service request
+  transferredFrom String?  // Previous agent ID if transferred
+  transferredAt   DateTime?
+  metadata        String   @default("{}") // JSON: additional context
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  endedAt         DateTime?
+  lastReadAt      DateTime? // When employer last read this conversation (for unread tracking)
+
+  agent           Agent?   @relation(fields: [agentId], references: [id])
+
+  @@index([customerId])
+  @@index([agentId])
+  @@index([status])
+  @@index([channel])
+}
+
+// ─── Employer Notifications ──────────────────────────────────────────────────
+// Web push-style notifications for employers
+
+model EmployerNotification {
+  id          String   @id @default(cuid())
+  agentId     String?  // null = broadcast to all
+  type        String   // email, whatsapp, voice, transfer, system, request_created
+  title       String
+  titleAr     String?  @default("")
+  message     String
+  messageAr   String?  @default("")
+  link        String?  // URL to navigate when clicked
+  priority    String   @default("normal") // low, normal, high, urgent
+  isRead      Boolean  @default(false)
+  metadata    String   @default("{}") // JSON: additional data (emailId, caseId, etc.)
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+
+  @@index([agentId])
+  @@index([isRead])
+  @@index([type])
+}
+
+// ─── Service Rule Actions ───────────────────────────────────────────────────
+// Defines what actions the AI agent should take when a service rule is matched
+// and all required fields are present (actionReady = true)
+
+model ServiceRuleAction {
+  id              String   @id @default(cuid())
+  ruleId          String
+  actionType      String   // e.g., "CREATE_RECORD", "API_CALL", "SEND_EMAIL", "UPDATE_STATUS"
+  endpoint        String?  @default("")  // for API_CALL
+  payloadTemplate String?  @default("")  // JSON template for payload/record creation
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rule            ServiceRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+}
+
+// ─── Rule Analytics ─────────────────────────────────────────────────────────
+// Tracks how often rules are triggered and their effectiveness
+
+model RuleHitLog {
+  id          String   @id @default(cuid())
+  ruleId      String
+  channel     String   @default("web") // web, whatsapp, email, voice
+  intent      String?  // detected intent
+  wasHelpful  Boolean? // did the rule result in a successful resolution
+  responseTimeMs Int?  // how long the AI took to respond
+  metadata    String?  @default("") // JSON for additional context
+  createdAt   DateTime @default(now())
+
+  rule        ServiceRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+}
+
+// ─── STT Transcripts ────────────────────────────────────────────────────────
+// Stores real-time speech-to-text transcripts for calls
+
+model STTTranscript {
+  id              String   @id @default(cuid())
+  sessionId       String   // ConversationSession ID
+  speaker         String   @default("customer") // customer, agent, ai
+  text            String
+  language        String   @default("en")
+  translatedText  String?  // AI-translated text
+  translatedLang  String?  // Target language for translation
+  timestamp       DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([timestamp])
+}
+
+// ─── Voice Call Recordings ────────────────────────────────────────────────
+// Stores audio recordings of voice calls for playback in admin dashboard
+
+model VoiceRecording {
+  id              String   @id @default(cuid())
+  sessionId       String   @unique // ConversationSession ID
+  filePath        String   // Relative path to WAV file: /voice-recordings/{sessionId}.wav
+  durationSeconds Float    @default(0) // Call duration in seconds
+  fileSizeBytes   Int      @default(0) // WAV file size in bytes
+  sampleRate      Int      @default(48000) // Audio sample rate
+  channels        Int      @default(1) // Mono
+  format          String   @default("wav") // Audio format
+  hasCustomerAudio Boolean @default(true) // Whether customer mic was recorded
+  hasAgentAudio   Boolean @default(true) // Whether AI/agent TTS was recorded
+  // Separate audio segment tracking for multi-speaker voice recorder
+  customerAudioSegments String @default("[]") // JSON: [{startTime, endTime, filePath}, ...]
+  aiAudioSegments      String @default("[]") // JSON: [{startTime, endTime, filePath}, ...]
+  employerAudioSegments String @default("[]") // JSON: [{startTime, endTime, filePath}, ...]
+  speakerTimeline      String @default("[]") // JSON: [{speaker, startTime, endTime}, ...]
+  metadata        String   @default("{}") // JSON: additional info (provider, language, etc.)
+  createdAt       DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+// ─── Employer Session Tracking ──────────────────────────────────────────────
+// Tracks employer login sessions and action logs for audit purposes
+
+model EmployerSession {
+  id          String   @id @default(cuid())
+  agentId     String   // Agent ID
+  agentEmail  String   // Agent email at time of login
+  loginAt     DateTime @default(now())
+  logoutAt    DateTime?
+  ipAddress   String   @default("")
+  userAgent   String   @default("")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  actions     EmployerActionLog[]
+
+  @@index([agentId])
+  @@index([isActive])
+  @@index([loginAt])
+}
+
+model EmployerActionLog {
+  id          String   @id @default(cuid())
+  sessionId   String   // EmployerSession ID
+  agentId     String   // Agent ID
+  action      String   // login, logout, view_conversation, send_message, transfer, change_ai_mode, update_settings, create_rule, edit_rule, delete_rule
+  details     String   @default("{}") // JSON: action-specific details
+  channel     String?  // Channel context: web, whatsapp, voice, email
+  targetId    String?  // Target entity ID (conversation ID, rule ID, etc.)
+  createdAt   DateTime @default(now())
+
+  session     EmployerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([agentId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ─── Employer Settings ──────────────────────────────────────────────────────
+// Persisted per-agent settings (font size, notifications, etc.)
+
+model EmployerSettings {
+  id                    String   @id @default(cuid())
+  agentId               String   @unique
+  fontSize              String   @default("medium") // small, medium, large
+  theme                 String   @default("light") // light, dark, system
+  language              String   @default("en") // en, ar
+  newMessageNotif       Boolean  @default(true)
+  caseAssignmentNotif   Boolean  @default(true)
+  escalationAlerts      Boolean  @default(true)
+  shiftReminders        Boolean  @default(true)
+  aiSuggestionNotif     Boolean  @default(false)
+  dailySummaryEmail     Boolean  @default(true)
+  criticalIncidentAlerts Boolean @default(true)
+  soundNotifications    Boolean  @default(true)
+  notificationSound     String   @default("chime")
+  autoReply             Boolean  @default(false)
+  aiAssistanceLevel     String   @default("moderate") // minimal, moderate, full
+  conversationSoundAlerts Boolean @default(true)
+  statusAutoChange      Boolean  @default(true)
+  compactMode           Boolean  @default(false)
+  showAISuggestions     Boolean  @default(true)
+  defaultView           String   @default("dashboard")
+  autoRefreshInterval   String   @default("15")
+  highContrast          Boolean  @default(false)
+  reducedMotion         Boolean  @default(false)
+  screenReaderOpt       Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([agentId])
+}
+
+// ─── AI Feature Settings (Global) ──────────────────────────────────────────
+model AIFeatureSettings {
+  id              String   @id @default(cuid())
+  enableRAG       Boolean  @default(true)
+  enableSentiment Boolean  @default(true)
+  enableIntent    Boolean  @default(true)
+  enableAutoCase  Boolean  @default(false)
+  aiProvider      String   @default("google")
+  aiModel         String   @default("gemini-2.5-flash")
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(2048)
+  responseLanguage String  @default("auto")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

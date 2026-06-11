@@ -1,0 +1,43 @@
+{
+  "apiKeys": {
+    "deepgram": "6d8ce3266e299f0d41f171dfa949ebc3e62b5c2c",
+    "cartesia": "sk_car_PMvksp4vATe4mbkmdrkb3i",
+    "recentechAI": "rk_378538813a1da63282dbc24382a55cc8",
+    "gemini": "rk_378538813a1da63282dbc24382a55cc8"
+  },
+  "endpoints": {
+    "recentechAIWorker": "https://recentech-ai-worker.42abudhabi424242.workers.dev",
+    "recentechAIGemini": "https://recentech-ai-worker.42abudhabi424242.workers.dev/gemini",
+    "recentechAIChat": "https://recentech-ai-worker.42abudhabi424242.workers.dev/v1"
+  },
+  "voice": {
+    "stt": {
+      "primary": "deepgram",
+      "model": "nova-3",
+      "language": "multi",
+      "encoding": "linear16",
+      "sampleRate": 48000
+    },
+    "tts": {
+      "primary": "cartesia",
+      "model": "sonic-3.5",
+      "voices": {
+        "en": "248be419-c632-4f23-adf1-5324ed7dbf1d",
+        "ar": "4e6d8196-8e5e-45c8-a1e9-40c36dedc4e3"
+      },
+      "encoding": "pcm_s16le",
+      "sampleRate": 48000
+    }
+  },
+  "llm": {
+    "primary": "gemini",
+    "fallback": "zai",
+    "models": {
+      "chat": "gemini-2.5-flash-preview-05-20",
+      "quick": "gemini-2.0-flash"
+    }
+  },
+  "database": {
+    "url": "file:./db/custom.db"
+  }
+}

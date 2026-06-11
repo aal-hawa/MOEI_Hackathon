@@ -1,0 +1,11 @@
+{
+  "name": "szhp-worker-service",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot index.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.0",
+    "hono": "^4.12.0"
+  }
+}

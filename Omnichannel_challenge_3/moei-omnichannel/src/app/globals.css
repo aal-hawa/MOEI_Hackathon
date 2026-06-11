@@ -1,0 +1,316 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Univers", "Inter", "Helvetica Neue", sans-serif;
+  --font-arabic: "GE Alma", "AXT Manal", "Tajawal", "Cairo", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* UAE Government Design System Colors — TDRA DLS 3.0 */
+  --color-ae-gold-50: #FBF7ED;
+  --color-ae-gold-100: #F5EBD0;
+  --color-ae-gold-200: #EDD9A3;
+  --color-ae-gold-300: #D7BC6D;
+  --color-ae-gold-400: #C9A34E;
+  --color-ae-gold-500: #B68A35;
+  --color-ae-gold-600: #9E742B;
+  --color-ae-gold-700: #7C5E24;
+  --color-ae-black-50: #F5F5F6;
+  --color-ae-black-100: #E1E3E5;
+  --color-ae-black-200: #C3C6CB;
+  --color-ae-black-300: #9EA2A9;
+  --color-ae-black-400: #6B7079;
+  --color-ae-black-500: #3E4046;
+  --color-ae-black-600: #2D2F33;
+  --color-ae-black-700: #1B1D21;
+  --color-ae-black-800: #121315;
+  --color-ae-red-50: #FEF2F1;
+  --color-ae-red-100: #FDE0DE;
+  --color-ae-red-200: #FBC4C1;
+  --color-ae-red-300: #F59D99;
+  --color-ae-red-400: #EC706B;
+  --color-ae-red-500: #E04E48;
+  --color-ae-red-600: #D83731;
+  --color-ae-red-700: #BD2924;
+  --color-ae-green-50: #EFF6F1;
+  --color-ae-green-100: #D6E9DB;
+  --color-ae-green-200: #B3D6BD;
+  --color-ae-green-300: #84BC95;
+  --color-ae-green-400: #5DA570;
+  --color-ae-green-500: #3F8E50;
+  --color-ae-green-600: #317A40;
+  --color-ae-green-700: #266333;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --background: #FFFFFF;
+    --foreground: #2D2F33; /* Iron */
+    --card: #FFFFFF;
+    --card-foreground: #2D2F33; /* Iron */
+    --popover: #FFFFFF;
+    --popover-foreground: #2D2F33;
+    --primary: #006352; /* Emerald Green — UAE MOEI Brand */
+    --primary-foreground: #FFFFFF;
+    --secondary: #F5F5F6; /* Light Silver */
+    --secondary-foreground: #2D2F33; /* Iron */
+    --muted: #F5F5F6;
+    --muted-foreground: #6B7079;
+    --accent: #E1E3E5; /* Silver */
+    --accent-foreground: #2D2F33; /* Iron */
+    --destructive: #D83731;
+    --destructive-foreground: #FFFFFF;
+    --border: #E1E3E5; /* Silver */
+    --input: #E1E3E5;
+    --ring: #006352;
+    --chart-1: #006352;
+    --chart-2: #C6A87C;
+    --chart-3: #2D2F33;
+    --chart-4: #84BC95;
+    --chart-5: #E1E3E5;
+    
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #2D2F33;
+    --sidebar-primary: #006352;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F5F5F6;
+    --sidebar-accent-foreground: #2D2F33;
+    --sidebar-border: #E1E3E5;
+    --sidebar-ring: #006352;
+  }
+}
+
+.dark {
+  --background: #121315;
+  --foreground: #F5F5F6;
+  --card: #1B1D21;
+  --card-foreground: #F5F5F6;
+  --popover: #1B1D21;
+  --popover-foreground: #F5F5F6;
+  --primary: #008771;
+  --primary-foreground: #FFFFFF;
+  --secondary: #D7BC6D;
+  --secondary-foreground: #121315;
+  --muted: #2D2F33;
+  --muted-foreground: #9EA2A9;
+  --accent: #2D2F33;
+  --accent-foreground: #F5F5F6;
+  --destructive: #EC706B;
+  --border: #3E4046;
+  --input: #3E4046;
+  --ring: #008771;
+  --chart-1: #008771;
+  --chart-2: #D7BC6D;
+  --chart-3: #F5F5F6;
+  --chart-4: #84BC95;
+  --chart-5: #3E4046;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-size: var(--app-font-size, 16px);
+  }
+  body {
+    @apply bg-background text-foreground text-[15px] md:text-[17px] lg:text-[18px];
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-background/80 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-ae-green-500;
+  }
+
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-ae-gold-400 to-ae-gold-600;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/20;
+  }
+  
+  .moei-border-top {
+    @apply border-t-4 border-t-primary;
+  }
+
+  .moei-border-left {
+    @apply border-l-4 border-l-primary;
+  }
+
+  /* UAE DLS accent line — thin gold stripe for headers/footers */
+  .uae-accent-line {
+    @apply h-1 bg-gradient-to-r from-ae-gold-400 via-ae-gold-500 to-ae-gold-400;
+  }
+
+  /* Subtle card style per UAE DLS — white, bordered, gentle shadow */
+  .uae-card {
+    @apply bg-white border border-ae-black-100 shadow-sm rounded-xl;
+  }
+
+  /* Gold-accent header underline — for section titles inside cards */
+  .uae-gold-header-line {
+    @apply flex items-center gap-3 mt-3;
+  }
+  .uae-gold-header-line::before {
+    content: '';
+    @apply h-[3px] w-10 shrink-0 rounded-full bg-gradient-to-r from-ae-gold-400 via-ae-gold-500 to-ae-gold-400;
+  }
+  .uae-gold-header-line::after {
+    content: '';
+    @apply h-px flex-1 bg-ae-gold-100;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #E1E3E5;
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #C3C6CB;
+  }
+
+  /* High contrast mode */
+  .high-contrast {
+    --background: #000000;
+    --foreground: #FFFFFF;
+    --card: #111111;
+    --card-foreground: #FFFFFF;
+    --border: #555555;
+    --input: #555555;
+    --muted: #222222;
+    --muted-foreground: #CCCCCC;
+  }
+  .high-contrast .bg-white {
+    background-color: #111111 !important;
+  }
+  .high-contrast .text-ae-black-800,
+  .high-contrast .text-ae-black-700,
+  .high-contrast .text-ae-black-600 {
+    color: #FFFFFF !important;
+  }
+  .high-contrast .text-ae-black-400,
+  .high-contrast .text-ae-black-300 {
+    color: #CCCCCC !important;
+  }
+  .high-contrast .border-ae-black-100,
+  .high-contrast .border-ae-black-50 {
+    border-color: #555555 !important;
+  }
+
+  /* Reduced motion */
+  .reduced-motion *,
+  .reduced-motion *::before,
+  .reduced-motion *::after {
+    animation-duration: var(--motion-duration, 0.01ms) !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--motion-duration, 0.01ms) !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Screen reader optimization */
+  .sr-optimized *:focus {
+    outline: 3px solid #006352 !important;
+    outline-offset: 2px !important;
+  }
+  .sr-optimized [role="button"],
+  .sr-optimized button,
+  .sr-optimized a,
+  .sr-optimized [tabindex] {
+    outline-offset: 3px !important;
+  }
+  .sr-optimized [aria-label]::before {
+    /* Ensure aria labels are more descriptive */
+    content: none;
+  }
+  .sr-optimized [role="status"],
+  .sr-optimized [role="alert"],
+  .sr-optimized [aria-live] {
+    font-weight: 600 !important;
+  }
+
+  /* Font size body classes */
+  body.text-sm {
+    font-size: 14px !important;
+  }
+  body.text-base {
+    font-size: 16px !important;
+  }
+  body.text-lg {
+    font-size: 18px !important;
+  }
+
+  /* Compact mode */
+  .compact-mode .p-4 {
+    padding: 0.5rem !important;
+  }
+  .compact-mode .p-6 {
+    padding: 0.75rem !important;
+  }
+  .compact-mode .gap-4 {
+    gap: 0.5rem !important;
+  }
+  .compact-mode .gap-6 {
+    gap: 0.75rem !important;
+  }
+  .compact-mode .space-y-4 > * + * {
+    margin-top: 0.5rem !important;
+  }
+  .compact-mode .py-2\.5 {
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+  }
+  .compact-mode .py-3 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+}

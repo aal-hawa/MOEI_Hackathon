@@ -1,0 +1,17 @@
+# Cloudflare Worker Configuration
+# Deploy with: cd src/worker && npx wrangler deploy
+
+name = "moei-api-worker"
+main = "index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment variables (set via Cloudflare dashboard for production)
+# [vars]
+# API_KEY = ""
+# ADMIN_TOKEN = ""
+# DATABASE_URL = ""
+
+# Development
+[dev]
+port = 3001

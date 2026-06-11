@@ -1,0 +1,1 @@
+var e=`#B68A35`,t=`#9A7429`,n=`#4CAF50`,r=`#D7BC6D`,i=`#C9A34E`,a=`#B68A35`,o=`#7C5E24`,s=`#3F8E50`,c=`#317A40`,l=`#D83731`;`${e}${t}`,`${t}`;var u={pending:`#EAB308`,under_review:`#3B82F6`,ai_assessed:i,approved:c,rejected:l,escalated:`#8B5CF6`};export{s as a,e as c,u as d,o as i,t as l,i as n,c as o,a as r,l as s,r as t,n as u};

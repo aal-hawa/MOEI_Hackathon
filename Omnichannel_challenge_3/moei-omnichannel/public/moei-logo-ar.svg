@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!-- MOEI Arabic Logo -->
+  <g transform="translate(0,0)">
+    <!-- UAE Flag Colors Bar -->
+    <rect x="0" y="0" width="6" height="60" fill="#00843D" rx="2"/>
+    <rect x="0" y="0" width="6" height="20" fill="#CE1126" rx="2"/>
+    
+    <!-- Arabic Text - وزارة الطاقة والبنية التحتية -->
+    <text x="16" y="22" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a" direction="rtl" text-anchor="end">
+      وزارة الطاقة والبنية التحتية
+    </text>
+    
+    <!-- English Text below -->
+    <text x="16" y="40" font-family="Arial, sans-serif" font-size="9" fill="#555" direction="rtl" text-anchor="end">
+      Ministry of Energy &amp; Infrastructure
+    </text>
+    
+    <!-- UAE emblem placeholder -->
+    <circle cx="182" cy="30" r="22" fill="#00843D" opacity="0.1"/>
+    <text x="182" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#00843D" font-weight="bold">UAE</text>
+    <text x="182" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="5" fill="#00843D">MOEI</text>
+  </g>
+</svg>
